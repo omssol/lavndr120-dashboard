@@ -78,22 +78,38 @@ if (savedToken && savedEmail) {
 // callback من Google Identity Services
 function handleCredential(response) {
   const credential = response.credential;
-  // فك تشفير JWT للحصول على الإيميل
   const payload = JSON.parse(atob(credential.split('.')[1]));
   const email   = payload.email.toLowerCase();
-  
+
   if (!ALLOWED.includes(email)) {
     showDenied();
     return;
   }
-  
+
   showSpinner(true);
-  showMsg('جاري تحميل البيانات...');
-  
-  const token = btoa(email + ':' + Date.now());
-  sessionStorage.setItem(T_KEY, token);
-  sessionStorage.setItem(E_KEY, email);
-  loadDashboard(token, email);
+  showMsg('جاري التحقق من الصلاحيات...');
+
+  // أرسل Firebase ID token لـ Railway للتحقق
+  fetch(RENDER + '/auth/firebase', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({id_token: credential})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) {
+      showSpinner(false);
+      showMsg('غير مصرح لك بالدخول 🔒');
+      return;
+    }
+    sessionStorage.setItem(T_KEY, data.token);
+    sessionStorage.setItem(E_KEY, email);
+    loadDashboard(data.token, email);
+  })
+  .catch(() => {
+    showSpinner(false);
+    showMsg('فشل الاتصال — حاول مجدداً');
+  });
 }
 
 async function loadDashboard(token, email) {
