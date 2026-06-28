@@ -21,9 +21,6 @@
            margin:32px auto;display:none;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .msg{color:#888;font-size:13px;margin-top:16px;}
-  .denied{text-align:center;padding:60px 20px;}
-  .denied .lock{font-size:48px;margin:24px;opacity:0.3;}
-  .denied .txt{color:#555;font-size:14px;}
 </style>
 </head>
 <body>
@@ -50,7 +47,7 @@ const ALLOWED = ['imspractice69@gmail.com'];
 const GAS     = 'https://script.google.com/macros/s/AKfycbzBRV8YVp445VgKRX0QUPbGeVyz0hxLkmiHk0c2TqtWXuERtCJt-EYlahZwef94QbyVcw/exec';
 const GAS_KEY = 'LAVNDR_SECRET_KEY_2026';
 
-const app  = initializeApp({
+const app = initializeApp({
   apiKey: "AIzaSyDR538OyW6eSoc8Dq3A50VQmOCEkNLzRIw",
   authDomain: "lavndr120.firebaseapp.com",
   projectId: "lavndr120",
@@ -71,21 +68,19 @@ function showMsg(t) { document.getElementById('msg').textContent = t; }
 
 function showDenied() {
   document.body.innerHTML =
-    '<div class="denied">' +
-    '<div class="logo" style="font-size:28px;font-weight:900;color:#C9A84C;">LAVNDR120</div>' +
-    '<div class="lock">🔒</div>' +
-    '<div class="txt">هذا النظام مخصص للمشاركين المسجلين فقط</div>' +
+    '<div style="text-align:center;padding:60px 20px;font-family:sans-serif;">' +
+    '<div style="font-size:28px;font-weight:900;color:#C9A84C;">LAVNDR120</div>' +
+    '<div style="font-size:48px;margin:24px;opacity:0.3;">🔒</div>' +
+    '<div style="color:#555;font-size:14px;">هذا النظام مخصص للمشاركين المسجلين فقط</div>' +
     '</div>';
 }
 
-// تحقق من جلسة محفوظة
 const savedToken = sessionStorage.getItem('lv_token');
 const savedEmail = sessionStorage.getItem('lv_email');
 if (savedToken && savedEmail) {
   showSpinner(true);
   loadDashboard(savedToken, savedEmail);
 } else {
-  // تحقق من redirect result
   showSpinner(true);
   showMsg('جاري التحقق...');
   getRedirectResult(auth)
@@ -97,7 +92,6 @@ if (savedToken && savedEmail) {
           auth.signOut();
           return;
         }
-        // الإيميل مصرح — احفظ الجلسة واجلب البيانات
         const token = btoa(email + ':' + Date.now());
         sessionStorage.setItem('lv_token', token);
         sessionStorage.setItem('lv_email', email);
@@ -107,10 +101,9 @@ if (savedToken && savedEmail) {
         showMsg('');
       }
     })
-    .catch(e => {
+    .catch(() => {
       showSpinner(false);
-      showMsg('حدث خطأ — حاول مجدداً');
-      console.error(e);
+      showMsg('');
     });
 }
 
@@ -147,7 +140,7 @@ async function loadDashboard(token, email) {
     document.close();
   } catch(e) {
     showSpinner(false);
-    showMsg('فشل تحميل البيانات — ' + e.message);
+    showMsg('فشل تحميل البيانات');
   }
 }
 </script>
