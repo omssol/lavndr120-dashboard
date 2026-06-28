@@ -5,102 +5,88 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>LAVNDR120</title>
 <style>
- body { background:#0a0a0f; display:flex; align-items:center;
-         justify-content:center; min-height:100vh; margin:0; }
- .logo { text-align:center; color:#C9A84C; font-size:28px;
-          font-weight:900; letter-spacing:2px; font-family:sans-serif; }
- .sub  { color:#555; font-size:11px; letter-spacing:3px;
-          text-align:center; margin-top:6px; font-family:sans-serif; }
- .spinner { border:3px solid #222; border-top:3px solid #C9A84C;
-             border-radius:50%; width:32px; height:32px;
-             animation:spin 1s linear infinite; margin:24px auto; }
- @keyframes spin { to { transform:rotate(360deg); } }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#0a0a0f;min-height:100vh;display:flex;align-items:center;
+       justify-content:center;font-family:sans-serif;}
+  .card{text-align:center;padding:40px 24px;}
+  .logo{font-size:32px;font-weight:900;letter-spacing:2px;
+        background:linear-gradient(135deg,#C9A84C,#F0D080);
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .sub{font-size:11px;color:#555;letter-spacing:3px;margin-top:4px;}
+  .btn{margin-top:40px;padding:14px 32px;background:#C9A84C;color:#000;
+       border:none;border-radius:12px;font-size:15px;font-weight:700;
+       cursor:pointer;width:100%;max-width:280px;display:block;margin:40px auto 0;
+       text-decoration:none;text-align:center;}
+  .spinner{border:3px solid #222;border-top:3px solid #C9A84C;border-radius:50%;
+           width:32px;height:32px;animation:spin 1s linear infinite;
+           margin:32px auto;display:none;}
+  @keyframes spin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
-<div>
- <div class="logo">LAVNDR120</div>
- <div class="sub">المؤشر الاستهلاكي</div>
- <div class="spinner"></div>
+<div class="card">
+  <div class="logo">LAVNDR120</div>
+  <div class="sub">المؤشر الاستهلاكي</div>
+  <div class="spinner" id="spinner"></div>
+  <div id="loginArea">
+    <a class="btn" id="loginBtn" href="https://lavndr120.onrender.com/auth/login">تسجيل الدخول بـ Google</a>
+  </div>
 </div>
-
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw8Cpi6W9FGY-DID6jsFhHpF5i6eoR9bb3rRGNnib0LSG7WgC7zn-qFphZTZJkGGyGu8A/exec';
-const AUTH_KEY = 'lavndr_token';
-const EMAIL_KEY = 'lavndr_email';
+const RENDER    = 'https://lavndr120.onrender.com';
+const GAS       = 'https://script.google.com/macros/s/AKfycbyrC-jxMrtP4-hRfBEnN7itaOmvlHc-WF-kW06yYUlSWl4J7lCCz1PZnIwC4xS2Dg2wmA/exec';
+const TOKEN_KEY = 'lv_token';
+const EMAIL_KEY = 'lv_email';
 
-// التحقق من توكن محفوظ
-const savedToken = sessionStorage.getItem(AUTH_KEY);
-const savedEmail = sessionStorage.getItem(EMAIL_KEY);
+const params   = new URLSearchParams(window.location.search);
+const urlToken = params.get('token');
+const urlEmail = params.get('email');
+const denied   = params.get('denied');
 
-if (savedToken && savedEmail) {
- // توكن موجود — تحقق منه مع GAS
- verifyAndLoad(savedToken, savedEmail);
+if (denied) {
+  showDenied();
+} else if (urlToken && urlEmail) {
+  sessionStorage.setItem(TOKEN_KEY, urlToken);
+  sessionStorage.setItem(EMAIL_KEY, urlEmail);
+  history.replaceState({},'',window.location.pathname);
+  loadDashboard(urlToken, urlEmail);
 } else {
- // لا توكن — افتح GAS للمصادقة
- openAuthPopup();
+  const saved = sessionStorage.getItem(TOKEN_KEY);
+  const email = sessionStorage.getItem(EMAIL_KEY);
+  if (saved && email) {
+    loadDashboard(saved, email);
+  }
 }
 
-function openAuthPopup() {
- const popup = window.open(
-   GAS_URL + '?mode=token',
-   'GAS_AUTH',
-   'width=500,height=600,scrollbars=yes'
- );
-
- // استمع للرسالة من GAS popup
- window.addEventListener('message', function(e) {
-   if (e.data && e.data.token && e.data.email) {
-     sessionStorage.setItem(AUTH_KEY, e.data.token);
-     sessionStorage.setItem(EMAIL_KEY, e.data.email);
-     if (popup) popup.close();
-     verifyAndLoad(e.data.token, e.data.email);
-   } else if (e.data && e.data.denied) {
-     showDenied();
-   }
- }, false);
-}
-
-function verifyAndLoad(token, email) {
- // اجلب البيانات من GAS مع التوكن
- fetch(GAS_URL + '?key=LAVNDR_SECRET_KEY_2026&action=data&token=' + encodeURIComponent(token))
-   .then(r => r.json())
-   .then(data => {
-     if (data.error && data.code === 401) {
-       sessionStorage.clear();
-       openAuthPopup();
-       return;
-     }
-     // ابن الداشبورد
-     loadDashboard(token, email, data);
-   })
-   .catch(() => { document.body.innerHTML = '<div style="color:#F43F5E;text-align:center;padding:40px;">فشل الاتصال</div>'; });
+function loadDashboard(token, email) {
+  document.getElementById('loginArea').style.display = 'none';
+  document.getElementById('spinner').style.display   = 'block';
+  fetch(GAS + '?key=LAVNDR_SECRET_KEY_2026&action=data&token=' + encodeURIComponent(token))
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        if (data.code === 401) { sessionStorage.clear(); location.reload(); return; }
+        throw new Error(data.error);
+      }
+      window.AUTH_TOKEN    = token;
+      window.USER_EMAIL    = email;
+      window.INITIAL_DATA  = data;
+      return fetch('dashboard.html');
+    })
+    .then(r => r.text())
+    .then(html => { document.open(); document.write(html); document.close(); })
+    .catch(() => {
+      document.getElementById('spinner').style.display   = 'none';
+      document.getElementById('loginArea').style.display = 'block';
+    });
 }
 
 function showDenied() {
- document.body.innerHTML = `
-   <div style="text-align:center;font-family:sans-serif;">
-     <div style="color:#C9A84C;font-size:28px;font-weight:900;">LAVNDR120</div>
-     <div style="color:#555;font-size:48px;margin:24px;">🔒</div>
-     <div style="color:#444;font-size:14px;">هذا النظام مخصص للمشاركين المسجلين فقط</div>
-   </div>`;
-}
-
-function loadDashboard(token, email, data) {
- // هنا يُحمَّل dashboard.html المحلي مع البيانات
- // سنضع الداشبورد الكامل في ملف منفصل
- window.AUTH_TOKEN = token;
- window.USER_EMAIL = email;
- window.INITIAL_DATA = data;
-
- // تحميل الداشبورد
- fetch('dashboard.html')
-   .then(r => r.text())
-   .then(html => {
-     document.open();
-     document.write(html);
-     document.close();
-   });
+  document.body.innerHTML = '<div style="text-align:center;padding:60px 20px;font-family:sans-serif;">'
+    + '<div style="font-size:28px;font-weight:900;color:#C9A84C;">LAVNDR120</div>'
+    + '<div style="font-size:48px;margin:24px;opacity:0.3;">🔒</div>'
+    + '<div style="color:#555;font-size:14px;">هذا النظام مخصص للمشاركين المسجلين فقط</div>'
+    + '</div>';
 }
 </script>
 </body>
