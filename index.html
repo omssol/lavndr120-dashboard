@@ -38,7 +38,7 @@ const GAS       = 'https://script.google.com/macros/s/AKfycbzBRV8YVp445VgKRX0QUP
 const TOKEN_KEY = 'lv_token';
 const EMAIL_KEY = 'lv_email';
 
-const params   = new URLSearchParams(window.location.search);
+const params   = new URLSearchParams(window.location.hash.substring(1));
 const urlToken = params.get('token');
 const urlEmail = params.get('email');
 const denied   = params.get('denied');
