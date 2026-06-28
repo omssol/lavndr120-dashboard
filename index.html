@@ -104,10 +104,8 @@ async function loadDashboard(token, email) {
   showSpinner(true);
   showMsg('جاري تحميل البيانات...');
   try {
-    const url  = RENDER + '/api/data';
-    const res  = await fetch(url, {
-      headers: {'X-Auth-Token': token, 'X-User-Email': email}
-    });
+    const url  = GAS + '?key=' + GAS_KEY + '&action=data';
+    const res  = await fetch(url);
     const data = await res.json();
     if (data.error && data.code === 401) {
       sessionStorage.clear();
