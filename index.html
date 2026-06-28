@@ -107,9 +107,22 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
+import { signInWithRedirect, getRedirectResult }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+// تحقق من نتيجة redirect
+getRedirectResult(auth).then(async result => {
+  if (result && result.user) {
+    // المستخدم رجع من Google redirect
+    showSpinner(true);
+  }
+}).catch(e => {
+  showMsg('فشل تسجيل الدخول');
+});
+
 window.signIn = async function() {
   try {
-    await signInWithPopup(auth, provider);
+    await signInWithRedirect(auth, provider);
   } catch(e) {
     showMsg('فشل تسجيل الدخول');
   }
