@@ -100,7 +100,7 @@ async function loadDashboard(token, email) {
   showSpinner(true);
   showMsg('جاري تحميل البيانات...');
   try {
-    const url  = GAS + '?key=' + GAS_KEY + '&action=data&token=' + encodeURIComponent(token);
+    const url  = GAS + '?key=' + GAS_KEY + '&action=data&token=' + encodeURIComponent(token) + '&email=' + encodeURIComponent(email);
     const res  = await fetch(url);
     const data = await res.json();
     if (data.error && data.code === 401) {
