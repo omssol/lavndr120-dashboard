@@ -21,6 +21,9 @@
            margin:32px auto;display:none;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .msg{color:#888;font-size:13px;margin-top:16px;}
+  .denied{text-align:center;padding:60px 20px;}
+  .denied .lock{font-size:48px;margin:24px;opacity:0.3;}
+  .denied .txt{color:#555;font-size:14px;}
 </style>
 </head>
 <body>
@@ -40,55 +43,65 @@ import {
   getAuth,
   signInWithRedirect,
   getRedirectResult,
-  GoogleAuthProvider,
-  onAuthStateChanged
+  GoogleAuthProvider
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
-const firebaseConfig = {
+const ALLOWED = ['imspractice69@gmail.com'];
+const GAS     = 'https://script.google.com/macros/s/AKfycbzBRV8YVp445VgKRX0QUPbGeVyz0hxLkmiHk0c2TqtWXuERtCJt-EYlahZwef94QbyVcw/exec';
+const GAS_KEY = 'LAVNDR_SECRET_KEY_2026';
+
+const app  = initializeApp({
   apiKey: "AIzaSyDR538OyW6eSoc8Dq3A50VQmOCEkNLzRIw",
-  authDomain: "lavndr120.onrender.com",
+  authDomain: "lavndr120.firebaseapp.com",
   projectId: "lavndr120",
   storageBucket: "lavndr120.firebasestorage.app",
   messagingSenderId: "938319363791",
   appId: "1:938319363791:web:ab581bd34b161e843201ba"
-};
+});
 
-const app      = initializeApp(firebaseConfig);
-
-// إبقاء Render مستيقظاً
-fetch('https://lavndr120.onrender.com/ping').catch(()=>{});
-setInterval(() => fetch('https://lavndr120.onrender.com/ping').catch(()=>{}), 600000);
 const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({prompt: 'select_account'});
 
-const GAS     = 'https://script.google.com/macros/s/AKfycbzBRV8YVp445VgKRX0QUPbGeVyz0hxLkmiHk0c2TqtWXuERtCJt-EYlahZwef94QbyVcw/exec';
-const GAS_KEY = 'LAVNDR_SECRET_KEY_2026';
-const RENDER  = 'https://lavndr120.onrender.com';
-const T_KEY   = 'lv_token';
-const E_KEY   = 'lv_email';
-
 function showSpinner(v) {
-  document.getElementById('spinner').style.display    = v ? 'block' : 'none';
-  document.getElementById('loginArea').style.display  = v ? 'none'  : 'block';
+  document.getElementById('spinner').style.display   = v ? 'block' : 'none';
+  document.getElementById('loginArea').style.display = v ? 'none'  : 'block';
 }
 function showMsg(t) { document.getElementById('msg').textContent = t; }
 
+function showDenied() {
+  document.body.innerHTML =
+    '<div class="denied">' +
+    '<div class="logo" style="font-size:28px;font-weight:900;color:#C9A84C;">LAVNDR120</div>' +
+    '<div class="lock">🔒</div>' +
+    '<div class="txt">هذا النظام مخصص للمشاركين المسجلين فقط</div>' +
+    '</div>';
+}
+
 // تحقق من جلسة محفوظة
-const savedToken = sessionStorage.getItem(T_KEY);
-const savedEmail = sessionStorage.getItem(E_KEY);
+const savedToken = sessionStorage.getItem('lv_token');
+const savedEmail = sessionStorage.getItem('lv_email');
 if (savedToken && savedEmail) {
   showSpinner(true);
-  showMsg('جاري التحميل...');
   loadDashboard(savedToken, savedEmail);
 } else {
   // تحقق من redirect result
   showSpinner(true);
   showMsg('جاري التحقق...');
   getRedirectResult(auth)
-    .then(async result => {
+    .then(result => {
       if (result && result.user) {
-        await handleUser(result.user);
+        const email = result.user.email.toLowerCase();
+        if (!ALLOWED.includes(email)) {
+          showDenied();
+          auth.signOut();
+          return;
+        }
+        // الإيميل مصرح — احفظ الجلسة واجلب البيانات
+        const token = btoa(email + ':' + Date.now());
+        sessionStorage.setItem('lv_token', token);
+        sessionStorage.setItem('lv_email', email);
+        loadDashboard(token, email);
       } else {
         showSpinner(false);
         showMsg('');
@@ -96,37 +109,9 @@ if (savedToken && savedEmail) {
     })
     .catch(e => {
       showSpinner(false);
-      showMsg('');
+      showMsg('حدث خطأ — حاول مجدداً');
+      console.error(e);
     });
-}
-
-async function handleUser(user) {
-  showMsg('جاري التحقق من الصلاحيات...');
-  try {
-    const idToken = await user.getIdToken();
-    // أيقظ Render أولاً
-    try { await fetch(RENDER + '/ping'); } catch(e) {}
-    await new Promise(r => setTimeout(r, 2000));
-    const res = await fetch(RENDER + '/auth/firebase', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({id_token: idToken})
-    });
-    const data = await res.json();
-    if (data.error) {
-      showSpinner(false);
-      showMsg('غير مصرح لك بالدخول 🔒');
-      await auth.signOut();
-      return;
-    }
-    sessionStorage.setItem(T_KEY, data.token);
-    sessionStorage.setItem(E_KEY, user.email.toLowerCase());
-    loadDashboard(data.token, user.email.toLowerCase());
-  } catch(e) {
-    showSpinner(false);
-    showMsg('فشل الاتصال — حاول مجدداً');
-    await auth.signOut();
-  }
 }
 
 window.signIn = async function() {
@@ -146,14 +131,11 @@ async function loadDashboard(token, email) {
     const url = GAS + '?key=' + GAS_KEY + '&action=data&token=' + encodeURIComponent(token);
     const res  = await fetch(url);
     const data = await res.json();
-    if (data.error) {
-      if (data.code === 401) {
-        sessionStorage.clear();
-        showSpinner(false);
-        showMsg('انتهت الجلسة — سجل الدخول مجدداً');
-        return;
-      }
-      throw new Error(data.error);
+    if (data.error && data.code === 401) {
+      sessionStorage.clear();
+      showSpinner(false);
+      showMsg('انتهت الجلسة — سجل الدخول مجدداً');
+      return;
     }
     window.AUTH_TOKEN   = token;
     window.USER_EMAIL   = email;
