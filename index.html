@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>LAVNDR120</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:#0a0a0f;min-height:100vh;display:flex;align-items:center;
@@ -13,14 +14,12 @@
         background:linear-gradient(135deg,#C9A84C,#F0D080);
         -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
   .sub{font-size:11px;color:#555;letter-spacing:3px;margin-top:4px;}
-  .btn{margin-top:40px;padding:14px 32px;background:#C9A84C;color:#000;
-       border:none;border-radius:12px;font-size:15px;font-weight:700;
-       cursor:pointer;width:100%;max-width:280px;display:block;margin:40px auto 0;}
   .spinner{border:3px solid #222;border-top:3px solid #C9A84C;border-radius:50%;
            width:32px;height:32px;animation:spin 1s linear infinite;
            margin:32px auto;display:none;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .msg{color:#888;font-size:13px;margin-top:16px;}
+  #loginArea{margin-top:40px;display:flex;justify-content:center;}
 </style>
 </head>
 <body>
@@ -29,36 +28,29 @@
   <div class="sub">المؤشر الاستهلاكي</div>
   <div class="spinner" id="spinner"></div>
   <div id="loginArea">
-    <button class="btn" id="loginBtn" onclick="signIn()">تسجيل الدخول بـ Google</button>
+    <div id="g_id_onload"
+         data-client_id="938319363791-0l0hj9ji67v9avmlnhq1vt8hiuqmp2lt.apps.googleusercontent.com"
+         data-callback="handleCredential"
+         data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="signin_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+    </div>
   </div>
   <div class="msg" id="msg"></div>
 </div>
 
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import {
-  getAuth,
-  signInWithRedirect,
-  getRedirectResult,
-  GoogleAuthProvider
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-
-const ALLOWED = ['imspractice69@gmail.com'];
-const GAS     = 'https://script.google.com/macros/s/AKfycbzBRV8YVp445VgKRX0QUPbGeVyz0hxLkmiHk0c2TqtWXuERtCJt-EYlahZwef94QbyVcw/exec';
-const GAS_KEY = 'LAVNDR_SECRET_KEY_2026';
-
-const app = initializeApp({
-  apiKey: "AIzaSyDR538OyW6eSoc8Dq3A50VQmOCEkNLzRIw",
-  authDomain: "lavndr120.firebaseapp.com",
-  projectId: "lavndr120",
-  storageBucket: "lavndr120.firebasestorage.app",
-  messagingSenderId: "938319363791",
-  appId: "1:938319363791:web:ab581bd34b161e843201ba"
-});
-
-const auth     = getAuth(app);
-const provider = new GoogleAuthProvider();
-provider.setCustomParameters({prompt: 'select_account'});
+<script>
+const ALLOWED  = ['imspractice69@gmail.com'];
+const GAS      = 'https://script.google.com/macros/s/AKfycbzBRV8YVp445VgKRX0QUPbGeVyz0hxLkmiHk0c2TqtWXuERtCJt-EYlahZwef94QbyVcw/exec';
+const GAS_KEY  = 'LAVNDR_SECRET_KEY_2026';
+const T_KEY    = 'lv_token';
+const E_KEY    = 'lv_email';
 
 function showSpinner(v) {
   document.getElementById('spinner').style.display   = v ? 'block' : 'none';
@@ -75,53 +67,40 @@ function showDenied() {
     '</div>';
 }
 
-const savedToken = sessionStorage.getItem('lv_token');
-const savedEmail = sessionStorage.getItem('lv_email');
+// تحقق من جلسة محفوظة
+const savedToken = sessionStorage.getItem(T_KEY);
+const savedEmail = sessionStorage.getItem(E_KEY);
 if (savedToken && savedEmail) {
   showSpinner(true);
   loadDashboard(savedToken, savedEmail);
-} else {
-  showSpinner(true);
-  showMsg('جاري التحقق...');
-  getRedirectResult(auth)
-    .then(result => {
-      if (result && result.user) {
-        const email = result.user.email.toLowerCase();
-        if (!ALLOWED.includes(email)) {
-          showDenied();
-          auth.signOut();
-          return;
-        }
-        const token = btoa(email + ':' + Date.now());
-        sessionStorage.setItem('lv_token', token);
-        sessionStorage.setItem('lv_email', email);
-        loadDashboard(token, email);
-      } else {
-        showSpinner(false);
-        showMsg('');
-      }
-    })
-    .catch(() => {
-      showSpinner(false);
-      showMsg('');
-    });
 }
 
-window.signIn = async function() {
-  try {
-    document.getElementById('loginBtn').disabled = true;
-    showMsg('جاري التوجيه لـ Google...');
-    await signInWithRedirect(auth, provider);
-  } catch(e) {
-    showMsg('فشل — حاول مجدداً');
-    document.getElementById('loginBtn').disabled = false;
+// callback من Google Identity Services
+function handleCredential(response) {
+  const credential = response.credential;
+  // فك تشفير JWT للحصول على الإيميل
+  const payload = JSON.parse(atob(credential.split('.')[1]));
+  const email   = payload.email.toLowerCase();
+  
+  if (!ALLOWED.includes(email)) {
+    showDenied();
+    return;
   }
-};
+  
+  showSpinner(true);
+  showMsg('جاري تحميل البيانات...');
+  
+  const token = btoa(email + ':' + Date.now());
+  sessionStorage.setItem(T_KEY, token);
+  sessionStorage.setItem(E_KEY, email);
+  loadDashboard(token, email);
+}
 
 async function loadDashboard(token, email) {
+  showSpinner(true);
   showMsg('جاري تحميل البيانات...');
   try {
-    const url = GAS + '?key=' + GAS_KEY + '&action=data&token=' + encodeURIComponent(token);
+    const url  = GAS + '?key=' + GAS_KEY + '&action=data&token=' + encodeURIComponent(token);
     const res  = await fetch(url);
     const data = await res.json();
     if (data.error && data.code === 401) {
@@ -133,7 +112,7 @@ async function loadDashboard(token, email) {
     window.AUTH_TOKEN   = token;
     window.USER_EMAIL   = email;
     window.INITIAL_DATA = data;
-    const r   = await fetch('dashboard.html');
+    const r    = await fetch('dashboard.html');
     const html = await r.text();
     document.open();
     document.write(html);
