@@ -89,27 +89,15 @@ function handleCredential(response) {
   showSpinner(true);
   showMsg('جاري التحقق من الصلاحيات...');
 
-  // أرسل Firebase ID token لـ Railway للتحقق
-  fetch(RENDER + '/auth/firebase', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({id_token: credential})
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.error) {
-      showSpinner(false);
-      showMsg('غير مصرح لك بالدخول 🔒');
-      return;
-    }
-    sessionStorage.setItem(T_KEY, data.token);
-    sessionStorage.setItem(E_KEY, email);
-    loadDashboard(data.token, email);
-  })
-  .catch(() => {
-    showSpinner(false);
-    showMsg('فشل الاتصال — حاول مجدداً');
-  });
+  // تحقق محلي — بدون أي سيرفر
+  if (!ALLOWED.includes(email)) {
+    showDenied();
+    return;
+  }
+  const token = credential; // استخدم Google JWT مباشرة
+  sessionStorage.setItem(T_KEY, token);
+  sessionStorage.setItem(E_KEY, email);
+  loadDashboard(token, email);
 }
 
 async function loadDashboard(token, email) {
@@ -118,7 +106,7 @@ async function loadDashboard(token, email) {
   try {
     const url  = RENDER + '/api/data';
     const res  = await fetch(url, {
-      headers: {'X-Auth-Token': token}
+      headers: {'X-Auth-Token': token, 'X-User-Email': email}
     });
     const data = await res.json();
     if (data.error && data.code === 401) {
