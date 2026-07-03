@@ -616,9 +616,10 @@ let allWeights = [];
 async function loadData() {
   try {
     let data;
-    // استخدم البيانات المُمررة من index.html إذا وُجدت
-    if (window.INITIAL_DATA) {
-      data = window.INITIAL_DATA;
+    // قراءة البيانات من sessionStorage
+    const stored = sessionStorage.getItem('lv_data');
+    if (stored) {
+      data = JSON.parse(stored);
     } else {
       // جلب مباشر من Cloudflare Worker
       const res = await fetch('https://lavndr120-proxy.imspractice69.workers.dev/data');
