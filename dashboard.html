@@ -615,21 +615,16 @@ let allWeights = [];
 // ── Load Data — كل request يحمل TOKEN ──
 async function loadData() {
   try {
-    // البيانات تأتي من GAS مع التوكن في الـ URL
-    const url = GAS_URL + '?key=' + API_KEY + '&action=data&token=' + encodeURIComponent(AUTH_TOKEN);
-    const res  = await fetch(url);
-    const data = await res.json();
-    if (data.error) {
-      if (data.code === 401) {
-        // التوكن انتهى — أعد تحميل الصفحة لتجديده
-        document.getElementById('loadingWrap').innerHTML =
-          '<div style="text-align:center;color:#F43F5E;padding:40px;">انتهت الجلسة<br>' +
-          '<button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;' +
-          'background:#C9A84C;border:none;border-radius:8px;color:#000;cursor:pointer;">تجديد</button></div>';
-        return;
-      }
-      throw new Error(data.error);
+    let data;
+    // استخدم البيانات المُمررة من index.html إذا وُجدت
+    if (window.INITIAL_DATA) {
+      data = window.INITIAL_DATA;
+    } else {
+      // جلب مباشر من Cloudflare Worker
+      const res = await fetch('https://lavndr120-proxy.imspractice69.workers.dev/data');
+      data = await res.json();
     }
+    if (data.error) throw new Error(data.error);
     globalData = data;
     renderAll(data);
     document.getElementById('loadingWrap').style.display = 'none';
