@@ -113,14 +113,9 @@ async function loadDashboard(token, email) {
       showMsg('انتهت الجلسة — سجل الدخول مجدداً');
       return;
     }
-    window.AUTH_TOKEN   = token;
-    window.USER_EMAIL   = email;
-    window.INITIAL_DATA = data;
-    const r    = await fetch('dashboard.html');
-    const html = await r.text();
-    document.open();
-    document.write(html);
-    document.close();
+    sessionStorage.setItem('lv_data', JSON.stringify(data));
+    sessionStorage.setItem('lv_email', email);
+    window.location.href = 'dashboard.html';
   } catch(e) {
     showSpinner(false);
     showMsg('فشل تحميل البيانات');
