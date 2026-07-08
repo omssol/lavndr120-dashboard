@@ -1047,5 +1047,62 @@ async function startSecureEngine() {
     setTimeout(() => clearInterval(syncInterval), 10000);
 })();
 </script>
+
+<script>
+// Final Robust Sync: Order-independent intelligent rendering
+(function() {
+    const checkIntegrity = () => {
+        // Ensure both renderAll function and globalData object are present
+        if (window.renderAll && window.globalData) {
+            console.log('Final Sync: Rendering engine and data are ready. Attempting to render...');
+            try {
+                // Call the renderAll function with the globalData
+                window.renderAll(window.globalData);
+
+                // Cleanup UI elements after successful rendering
+                const loginOverlay = document.getElementById('customLoginOverlay');
+                const loadingWrap = document.getElementById('loadingWrap');
+                const mainWrap = document.getElementById('mainWrap');
+                
+                if (loginOverlay) loginOverlay.style.display = 'none';
+                if (loadingWrap) loadingWrap.style.display = 'none';
+                if (mainWrap) mainWrap.style.display = 'block';
+
+                console.log('Dashboard rendered successfully.');
+                return true; // Indicate successful rendering
+            } catch(e) {
+                console.error('Final Sync Render Error:', e);
+                // Optionally, display an alert or error message to the user
+                // alert('An error occurred during dashboard rendering: ' + e.message);
+            }
+        }
+        return false; // Not yet ready or rendering failed
+    };
+
+    // Poll every 50ms until success or timeout (10 seconds)
+    let syncInterval = setInterval(() => {
+        if (checkIntegrity()) {
+            clearInterval(syncInterval);
+        }
+    }, 50);
+
+    // Set a maximum timeout to prevent infinite polling in case of persistent issues
+    setTimeout(() => {
+        clearInterval(syncInterval);
+        if (!checkIntegrity()) {
+            console.warn('Final Sync: Timeout reached, rendering engine or data not ready.');
+            // Fallback: If after timeout, rendering didn't happen, ensure UI is not stuck on loading
+            const loadingWrap = document.getElementById('loadingWrap');
+            const loginOverlay = document.getElementById('customLoginOverlay');
+            if (loadingWrap && loadingWrap.style.display !== 'none') {
+                loadingWrap.innerHTML = '<div style="text-align:center;color:#F43F5E;padding:40px;">فشل تحميل الداشبورد. يرجى إعادة تحميل الصفحة.</div>';
+            } else if (loginOverlay && loginOverlay.style.display !== 'none') {
+                 // If still on login overlay, maybe data fetch failed silently earlier
+                 document.getElementById('loginMsg').textContent = 'فشل التحميل. يرجى إعادة المحاولة.';
+            }
+        }
+    }, 10000); // 10 seconds timeout
+})();
+</script>
 </body>
 </html>
