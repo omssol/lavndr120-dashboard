@@ -385,9 +385,9 @@ body::before {
     text-align: center; width: 90%; max-width: 400px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
-.login-logo { 
-    color: #C9A84C; font-size: 32px; font-weight: bold; 
-    margin-bottom: 10px; letter-spacing: 2px; 
+.login-logo {
+    color: #C9A84C; font-size: 32px; font-weight: bold;
+    margin-bottom: 10px; letter-spacing: 2px;
 }
 .login-sub { color: rgba(255,255,255,0.6); font-size: 14px; margin-bottom: 30px; }
 </style>
@@ -396,7 +396,7 @@ body::before {
 <div id="customLoginOverlay">
     <div class="login-box">
         <div class="login-logo">LAVNDR120</div>
-        <div class="login-sub">مؤشر السودان الاستهلاكي</div>
+        <div class="login-sub">المؤشر الاستهلاكي</div>
         <div id="g_id_onload" data-client_id="938319363791-0l0hj9ji67v9avmlnhq1vt8hiuqmp2lt.apps.googleusercontent.com" data-callback="handleGoogleLogin"></div>
         <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-text="signin_with" data-shape="pill"></div>
     </div>
@@ -973,7 +973,10 @@ window.handleGoogleLogin = function(response) {
   }
 
   document.getElementById('customLoginOverlay').style.display = 'none';
-  if (typeof loadData === 'function') loadData();
+  // التأكد من استدعاء دالة تحميل البيانات الأصلية الموجودة في dashboard.html
+  if (typeof loadData === 'function') {
+      loadData();
+  }
 };
 </script>
 </body>
