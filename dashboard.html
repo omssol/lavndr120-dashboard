@@ -982,23 +982,26 @@ async function loadSecureData() {
             headers: { 'Authorization': 'Bearer ' + window.sessionToken }
         });
         if (!res.ok) throw new Error('Proxy Error: ' + res.status);
-        
+
         const data = await res.json();
         console.log('Data received:', data);
-        
-        // التحقق من سلامة البيانات قبل الرندر
+
         if (!data || !data.index) {
              throw new Error('بيانات المؤشر مفقودة من الاستجابة');
         }
 
         globalData = data;
 
+        // Ensure renderAll exists before calling it
         if (typeof renderAll === 'function') {
             renderAll(data);
-            // تأكيد إضافي لإخفاء الـ preloader بعد الرندر
+            finishLoading();
+        } else if (window.renderAll && typeof window.renderAll === 'function') {
+            window.renderAll(data);
             finishLoading();
         } else {
-            alert('خطأ: دالة renderAll غير معرفة في الصفحة');
+            console.error('Critical: renderAll function not found.');
+            alert('خطأ برمي: لم يتم العثور على محرك العرض (renderAll). يرجى عمل تحديث قسري للصفحة.');
         }
 
     } catch (e) {
