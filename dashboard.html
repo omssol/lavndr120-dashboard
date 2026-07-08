@@ -661,7 +661,7 @@ async function loadData() {
 }
 
 // ── Render All ──
-function renderAll(data) {
+window.renderAll = function(data) {
   renderNAV(data);
   renderPosition(data);
   renderFund(data);
@@ -924,7 +924,7 @@ async function buyShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ تمت عملية الشراء بنجاح');
-    await // Managed by Auth
+    await // Handled by Auth Patch
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -939,7 +939,7 @@ async function sellShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ حصتك معروضة في السوق');
-    await // Managed by Auth
+    await // Handled by Auth Patch
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -955,7 +955,7 @@ function closeNotif() {
 }
 
 // ── Init ──
-// Managed by Auth
+// Handled by Auth Patch
 setInterval(loadData, 3600000);
 </script>
 
@@ -982,38 +982,33 @@ async function loadSecureData() {
             headers: { 'Authorization': 'Bearer ' + window.sessionToken }
         });
         if (!res.ok) throw new Error('Proxy Error: ' + res.status);
-
         const data = await res.json();
-        console.log('Data received:', data);
-
-        if (!data || !data.index) {
-             throw new Error('بيانات المؤشر مفقودة من الاستجابة');
-        }
-
         globalData = data;
 
-        // Ensure renderAll exists before calling it
-        if (typeof renderAll === 'function') {
-            renderAll(data);
-            finishLoading();
-        } else if (window.renderAll && typeof window.renderAll === 'function') {
-            window.renderAll(data);
-            finishLoading();
-        } else {
-            console.error('Critical: renderAll function not found.');
-            alert('خطأ برمي: لم يتم العثور على محرك العرض (renderAll). يرجى عمل تحديث قسري للصفحة.');
-        }
+        // Smart Wait for renderAll
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds
+        
+        const tryRender = setInterval(() => {
+            const renderFn = window.renderAll || (typeof renderAll === 'function' ? renderAll : null);
+            
+            if (renderFn) {
+                clearInterval(tryRender);
+                renderFn(data);
+                document.getElementById('customLoginOverlay').style.display = 'none';
+                if (document.getElementById('loadingWrap')) document.getElementById('loadingWrap').style.display = 'none';
+                if (document.getElementById('mainWrap')) document.getElementById('mainWrap').style.display = 'block';
+            } else if (attempts >= maxAttempts) {
+                clearInterval(tryRender);
+                alert('خطأ فني: محرك العرض لم يستجب. يرجى مراسلة الدعم.');
+            }
+            attempts++;
+        }, 100);
 
     } catch (e) {
-        console.error('Fetch/Render Error:', e);
-        document.getElementById('statusMsg').innerHTML = '<span style="color:red">فشل في عرض البيانات: ' + e.message + '</span>';
+        console.error('Fetch Error:', e);
+        document.getElementById('statusMsg').innerHTML = '<span style="color:red">فشل الاتصال: ' + e.message + '</span>';
     }
-}
-
-function finishLoading() {
-    document.getElementById('customLoginOverlay').style.display = 'none';
-    if (document.getElementById('loadingWrap')) document.getElementById('loadingWrap').style.display = 'none';
-    if (document.getElementById('mainWrap')) document.getElementById('mainWrap').style.display = 'block';
 }
 </script>
 </body>
