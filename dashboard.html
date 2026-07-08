@@ -629,6 +629,7 @@ async function loadData() {
     if (!data || typeof data !== 'object') throw new Error('Invalid data: ' + typeof data);
     if (data.error) throw new Error(data.error);
     globalData = data;
+    alert('data ok: ' + data.indexTicker);
     try { renderNAV(data); } catch(e) { throw new Error('renderNAV: ' + e.message); }
     try { renderPosition(data); } catch(e) { throw new Error('renderPosition: ' + e.message); }
     try { renderFund(data); } catch(e) { throw new Error('renderFund: ' + e.message); }
