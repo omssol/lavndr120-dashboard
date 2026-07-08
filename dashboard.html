@@ -998,5 +998,28 @@ async function startSecureEngine() {
     }
 }
 </script>
+
+<script>
+// Ultra-Fast Recovery: Forces rendering as soon as window properties are detected
+(function() {
+    let attempts = 0;
+    const fastObserver = setInterval(() => {
+        if (window.renderAll && window.globalData) {
+            console.log('Engine & Data synced. Triggering rendering...');
+            try {
+                window.renderAll(window.globalData);
+                clearInterval(fastObserver);
+                // Final UI Cleanup
+                const overlay = document.getElementById('customLoginOverlay');
+                if(overlay) overlay.style.display = 'none';
+                document.getElementById('mainWrap').style.display = 'block';
+            } catch(e) { console.error('Render error:', e); }
+        }
+        if (attempts++ > 250) { // Stop after 5 seconds of failure
+            clearInterval(fastObserver);
+        }
+    }, 20); 
+})();
+</script>
 </body>
 </html>
