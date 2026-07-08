@@ -633,7 +633,8 @@ async function loadData() {
   } catch(e) {
     document.getElementById('loadingWrap').innerHTML =
       '<div style="text-align:center;color:#F43F5E;padding:40px;">فشل الاتصال<br>' +
-      '<small style="color:var(--text-dim);">' + e.message + '</small></div>';
+      '<small style="color:#fff;">' + e.message + '</small><br>' +
+      '<small style="color:#888;">' + e.stack + '</small></div>';
   }
 }
 
