@@ -370,6 +370,19 @@ body::before {
 </style>
 </head>
 <body>
+<div id="customLoginOverlay" style="position:fixed;inset:0;background:#0a0a0f;display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;">
+    <div style="text-align:center;padding:40px;background:rgba(20,20,25,0.95);border-radius:24px;border:1px solid #C9A84C;">
+        <div style="color:#C9A84C;font-size:32px;font-weight:bold;margin-bottom:10px;">LAVNDR120</div>
+        <div style="color:#888;margin-bottom:30px;">يرجى تسجيل الدخول للمتابعة</div>
+        <div id="g_id_onload" 
+             data-client_id="938319363791-0l0hj9ji67v9avmlnhq1vt8hiuqmp2lt.apps.googleusercontent.com" 
+             data-callback="handleGoogleLogin" 
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-text="signin_with" data-shape="pill"></div>
+    </div>
+</div>
+
 
 <!-- Notification Bar -->
 <div class="notif-bar" id="notifBar">
@@ -391,7 +404,7 @@ body::before {
 
     <!-- Hero -->
     <div class="hero fade-up">
-      <div class="hero-eyebrow">المؤشر الاستهلاكي</div>
+      <div class="hero-eyebrow">مؤشر السودان الاستهلاكي</div>
       <div class="hero-ticker">LAVNDR120</div>
       <div class="hero-subtitle" id="lastUpdateText">يتم التحديث...</div>
     </div>
@@ -891,7 +904,7 @@ async function buyShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ تمت عملية الشراء بنجاح');
-    await // loadData(); (Managed by login)
+    await // loadData(); (Disabled auto-start)
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -906,7 +919,7 @@ async function sellShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ حصتك معروضة في السوق');
-    await // loadData(); (Managed by login)
+    await // loadData(); (Disabled auto-start)
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -922,11 +935,11 @@ function closeNotif() {
 }
 
 // ── Init ──
-// loadData(); (Managed by login)
+// loadData(); (Disabled auto-start)
 setInterval(loadData, 3600000);
 </script>
 
-<script src='https://accounts.google.com/gsi/client' async defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 const ALLOWED_EMAILS = ['imspractice69@gmail.com'];
 const PROXY_URL = 'https://lavndr120-proxy.imspractice69.workers.dev/data';
@@ -934,40 +947,40 @@ const PROXY_URL = 'https://lavndr120-proxy.imspractice69.workers.dev/data';
 window.handleGoogleLogin = function(response) {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
     const email = payload.email.toLowerCase();
-    
+
     if (!ALLOWED_EMAILS.includes(email)) {
-        alert('غير مصرح لهذا البريد بالدخول');
+        alert('عذراً، هذا البريد (' + email + ') غير مصرح له.');
         return;
     }
 
+    // إخفاء واجهة الدخول وحفظ التوكن
     document.getElementById('customLoginOverlay').style.display = 'none';
+    window.authToken = response.credential;
     
-    // حفظ التوكن للطلبات القادمة
-    window.googleAuthToken = response.credential;
-    
-    // استدعاء التحميل مع التوكن
-    loadDataWithAuth();
+    // بدء التحميل
+    loadSecureData();
 };
 
-async function loadDataWithAuth() {
+async function loadSecureData() {
     try {
         const res = await fetch(PROXY_URL, {
-            headers: {
-                'Authorization': 'Bearer ' + window.googleAuthToken
-            }
+            headers: { 'Authorization': 'Bearer ' + window.authToken }
         });
-        
-        if (res.status === 401) throw new Error('Unauthorized');
-        
+
+        if (!res.ok) throw new Error('فشل التحقق: ' + res.status);
+
         const data = await res.json();
         globalData = data;
-        if (typeof renderAll === 'function') renderAll(data);
         
+        if (typeof renderAll === 'function') {
+            renderAll(data);
+        }
+
         document.getElementById('loadingWrap').style.display = 'none';
         document.getElementById('mainWrap').style.display = 'block';
-    } catch(e) {
+    } catch (e) {
         console.error(e);
-        alert('فشل جلب البيانات: ' + e.message);
+        alert('خطأ في جلب البيانات: ' + e.message);
     }
 }
 </script>
