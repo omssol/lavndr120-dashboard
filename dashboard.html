@@ -891,7 +891,7 @@ async function buyShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ تمت عملية الشراء بنجاح');
-    await loadData();
+    await // loadData(); (Managed by login)
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -906,7 +906,7 @@ async function sellShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ حصتك معروضة في السوق');
-    await loadData();
+    await // loadData(); (Managed by login)
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -922,24 +922,54 @@ function closeNotif() {
 }
 
 // ── Init ──
-loadData();
+// loadData(); (Managed by login)
 setInterval(loadData, 3600000);
 </script>
 
-    <script src='https://accounts.google.com/gsi/client' async defer></script>
-    <script>
-    const ALLOWED_EMAILS = ['imspractice69@gmail.com'];
+<script src='https://accounts.google.com/gsi/client' async defer></script>
+<script>
+const ALLOWED_EMAILS = ['imspractice69@gmail.com'];
+const PROXY_URL = 'https://lavndr120-proxy.imspractice69.workers.dev/data';
+
+window.handleGoogleLogin = function(response) {
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const email = payload.email.toLowerCase();
     
-    window.handleGoogleLogin = function(response) {
-        const payload = JSON.parse(atob(response.credential.split('.')[1]));
-        const email = payload.email.toLowerCase();
-        if (!ALLOWED_EMAILS.includes(email)) {
-            alert('غير مصرح لك بالدخول');
-            return;
-        }
-        document.getElementById('customLoginOverlay').style.display = 'none';
-        if (typeof loadData === 'function') { loadData(); }
-    };
-    </script>
-    </body>
+    if (!ALLOWED_EMAILS.includes(email)) {
+        alert('غير مصرح لهذا البريد بالدخول');
+        return;
+    }
+
+    document.getElementById('customLoginOverlay').style.display = 'none';
+    
+    // حفظ التوكن للطلبات القادمة
+    window.googleAuthToken = response.credential;
+    
+    // استدعاء التحميل مع التوكن
+    loadDataWithAuth();
+};
+
+async function loadDataWithAuth() {
+    try {
+        const res = await fetch(PROXY_URL, {
+            headers: {
+                'Authorization': 'Bearer ' + window.googleAuthToken
+            }
+        });
+        
+        if (res.status === 401) throw new Error('Unauthorized');
+        
+        const data = await res.json();
+        globalData = data;
+        if (typeof renderAll === 'function') renderAll(data);
+        
+        document.getElementById('loadingWrap').style.display = 'none';
+        document.getElementById('mainWrap').style.display = 'block';
+    } catch(e) {
+        console.error(e);
+        alert('فشل جلب البيانات: ' + e.message);
+    }
+}
+</script>
+</body>
 </html>
