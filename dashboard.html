@@ -626,10 +626,17 @@ async function loadData() {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       data = await res.json();
     }
-    if (!data || typeof data !== 'object') throw new Error('Invalid data');
+    if (!data || typeof data !== 'object') throw new Error('Invalid data: ' + typeof data);
     if (data.error) throw new Error(data.error);
     globalData = data;
-    renderAll(data);
+    try { renderNAV(data); } catch(e) { throw new Error('renderNAV: ' + e.message); }
+    try { renderPosition(data); } catch(e) { throw new Error('renderPosition: ' + e.message); }
+    try { renderFund(data); } catch(e) { throw new Error('renderFund: ' + e.message); }
+    try { renderChart(data); } catch(e) { throw new Error('renderChart: ' + e.message); }
+    try { renderStats(data); } catch(e) { throw new Error('renderStats: ' + e.message); }
+    try { renderMarket(data); } catch(e) { throw new Error('renderMarket: ' + e.message); }
+    try { renderComponents(data); } catch(e) { throw new Error('renderComponents: ' + e.message); }
+    try { renderHistory(data); } catch(e) { throw new Error('renderHistory: ' + e.message); }
     document.getElementById('loadingWrap').style.display = 'none';
     document.getElementById('mainWrap').style.display = 'block';
   } catch(e) {
