@@ -924,7 +924,7 @@ async function buyShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ تمت عملية الشراء بنجاح');
-    await // Handled by Auth Patch
+    await // System Bootstrapped by Auth
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -939,7 +939,7 @@ async function sellShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ حصتك معروضة في السوق');
-    await // Handled by Auth Patch
+    await // System Bootstrapped by Auth
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -955,7 +955,7 @@ function closeNotif() {
 }
 
 // ── Init ──
-// Handled by Auth Patch
+// System Bootstrapped by Auth
 setInterval(loadData, 3600000);
 </script>
 
@@ -981,33 +981,28 @@ async function loadSecureData() {
         const res = await fetch(PROXY_URL, {
             headers: { 'Authorization': 'Bearer ' + window.sessionToken }
         });
-        if (!res.ok) throw new Error('Proxy Error: ' + res.status);
+        if (!res.ok) throw new Error('Proxy Status: ' + res.status);
         const data = await res.json();
-        globalData = data;
+        window.globalData = data;
 
-        // Smart Wait for renderAll
         let attempts = 0;
-        const maxAttempts = 50; // 5 seconds
-        
-        const tryRender = setInterval(() => {
-            const renderFn = window.renderAll || (typeof renderAll === 'function' ? renderAll : null);
-            
-            if (renderFn) {
-                clearInterval(tryRender);
-                renderFn(data);
+        const interval = setInterval(() => {
+            // Check for window.renderAll specifically
+            if (typeof window.renderAll === 'function') {
+                clearInterval(interval);
+                window.renderAll(data);
                 document.getElementById('customLoginOverlay').style.display = 'none';
                 if (document.getElementById('loadingWrap')) document.getElementById('loadingWrap').style.display = 'none';
                 if (document.getElementById('mainWrap')) document.getElementById('mainWrap').style.display = 'block';
-            } else if (attempts >= maxAttempts) {
-                clearInterval(tryRender);
-                alert('خطأ فني: محرك العرض لم يستجب. يرجى مراسلة الدعم.');
+            } else if (attempts > 60) { // 6 seconds
+                clearInterval(interval);
+                document.getElementById('statusMsg').innerHTML = '<b style="color:red">خطأ فني: محرك العرض لم يستجب</b>';
+                console.error('renderAll not found in window scope');
             }
             attempts++;
         }, 100);
-
     } catch (e) {
-        console.error('Fetch Error:', e);
-        document.getElementById('statusMsg').innerHTML = '<span style="color:red">فشل الاتصال: ' + e.message + '</span>';
+        document.getElementById('statusMsg').innerHTML = '<span style="color:red">فشل: ' + e.message + '</span>';
     }
 }
 </script>
