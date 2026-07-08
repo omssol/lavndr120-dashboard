@@ -649,7 +649,7 @@ async function loadData() {
 }
 
 // ── Render All ──
-function renderAll(data) {
+window.renderAll = function renderAll(data) {
   renderNAV(data);
   renderPosition(data);
   renderFund(data);
@@ -988,7 +988,7 @@ setInterval(loadData, 3600000);
 const ALLOWED_EMAILS = ['imspractice69@gmail.com'];
 const CF_WORKER = 'https://lavndr120-proxy.imspractice69.workers.dev';
 
-function handleGoogleLogin(response) {
+window.handleGoogleLogin = function handleGoogleLogin(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   const email = payload.email.toLowerCase();
   
