@@ -924,7 +924,7 @@ async function buyShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ تمت عملية الشراء بنجاح');
-    await // loadData(); (Managed by Overlay)
+    await // Managed by Auth
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -939,7 +939,7 @@ async function sellShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ حصتك معروضة في السوق');
-    await // loadData(); (Managed by Overlay)
+    await // Managed by Auth
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -955,7 +955,7 @@ function closeNotif() {
 }
 
 // ── Init ──
-// loadData(); (Managed by Overlay)
+// Managed by Auth
 setInterval(loadData, 3600000);
 </script>
 
@@ -967,12 +967,10 @@ const PROXY_URL = 'https://lavndr120-proxy.imspractice69.workers.dev/data';
 window.handleGoogleLogin = function(response) {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
     const email = payload.email.toLowerCase();
-
     if (!ALLOWED_EMAILS.includes(email)) {
-        alert('عذراً، هذا الحساب غير مصرح له بالدخول.');
+        alert('عذراً، هذا الحساب غير مصرح له.');
         return;
     }
-
     document.getElementById('statusMsg').style.display = 'block';
     window.sessionToken = response.credential;
     loadSecureData();
@@ -983,29 +981,36 @@ async function loadSecureData() {
         const res = await fetch(PROXY_URL, {
             headers: { 'Authorization': 'Bearer ' + window.sessionToken }
         });
-
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error('الخادم أعاد خطأ (' + res.status + '): ' + errText);
+        if (!res.ok) throw new Error('Proxy Error: ' + res.status);
+        
+        const data = await res.json();
+        console.log('Data received:', data);
+        
+        // التحقق من سلامة البيانات قبل الرندر
+        if (!data || !data.index) {
+             throw new Error('بيانات المؤشر مفقودة من الاستجابة');
         }
 
-        const data = await res.json();
         globalData = data;
 
         if (typeof renderAll === 'function') {
             renderAll(data);
+            // تأكيد إضافي لإخفاء الـ preloader بعد الرندر
+            finishLoading();
+        } else {
+            alert('خطأ: دالة renderAll غير معرفة في الصفحة');
         }
 
-        document.getElementById('customLoginOverlay').style.display = 'none';
-        if (document.getElementById('loadingWrap')) document.getElementById('loadingWrap').style.display = 'none';
-        if (document.getElementById('mainWrap')) document.getElementById('mainWrap').style.display = 'block';
-
     } catch (e) {
-        console.error(e);
-        // إظهار تنبيه مفصل للمستخدم
-        alert('تفاصيل فشل الاتصال:\n' + e.message);
-        document.getElementById('statusMsg').innerHTML = '<span style="color:#ff4444">فشل في جلب البيانات: ' + e.message + '</span>';
+        console.error('Fetch/Render Error:', e);
+        document.getElementById('statusMsg').innerHTML = '<span style="color:red">فشل في عرض البيانات: ' + e.message + '</span>';
     }
+}
+
+function finishLoading() {
+    document.getElementById('customLoginOverlay').style.display = 'none';
+    if (document.getElementById('loadingWrap')) document.getElementById('loadingWrap').style.display = 'none';
+    if (document.getElementById('mainWrap')) document.getElementById('mainWrap').style.display = 'block';
 }
 </script>
 </body>
