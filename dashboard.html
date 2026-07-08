@@ -1006,5 +1006,13 @@ async function loadSecureData() {
     }
 }
 </script>
+
+<script>
+// إرسال إشارة للمتصفح بأن المحرك جاهز تماماً
+if (typeof window.renderAll === 'function' && window.globalData) {
+    console.log('Rendering engine active and data found. Triggering...');
+    window.renderAll(window.globalData);
+}
+</script>
 </body>
 </html>
