@@ -917,7 +917,7 @@ async function buyShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ تمت عملية الشراء بنجاح');
-    await // System Bootstrapped by Login
+    await // Managed by Smart Bootstrap
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -932,7 +932,7 @@ async function sellShare() {
     const data = await res.json();
     if (data.error) { showNotif('خطأ: ' + data.error); return; }
     showNotif('✓ حصتك معروضة في السوق');
-    await // System Bootstrapped by Login
+    await // Managed by Smart Bootstrap
   } catch(e) { showNotif('فشل الاتصال'); }
 }
 
@@ -948,7 +948,7 @@ function closeNotif() {
 }
 
 // ── Init ──
-// System Bootstrapped by Login
+// Managed by Smart Bootstrap
 setInterval(loadData, 3600000);
 </script>
 
@@ -965,33 +965,36 @@ window.handleGoogleLogin = function(response) {
         return;
     }
     document.getElementById('statusMsg').style.display = 'block';
-    window.sessionToken = response.credential;
-    fetchSecureData();
+    window.authToken = response.credential;
+    startSecureEngine();
 };
 
-async function fetchSecureData() {
+async function startSecureEngine() {
     try {
-        const res = await fetch(PROXY_URL, { headers: { 'Authorization': 'Bearer ' + window.sessionToken } });
-        if (!res.ok) throw new Error('Proxy error ' + res.status);
+        const res = await fetch(PROXY_URL, { headers: { 'Authorization': 'Bearer ' + window.authToken } });
+        if (!res.ok) throw new Error('Network status: ' + res.status);
         window.globalData = await res.json();
-        
-        // المراقب الذكي: ينتظر حتى يكون المحرك والبيانات جاهزين
-        let checkCount = 0;
-        const observer = setInterval(() => {
+
+        // مراقب عالي التردد لضمان التشغيل فور جاهزية الـ DOM والمحرك
+        let checks = 0;
+        const engineObserver = setInterval(() => {
             if (typeof window.renderAll === 'function' && window.globalData) {
-                clearInterval(observer);
+                clearInterval(engineObserver);
                 window.renderAll(window.globalData);
-                document.getElementById('customLoginOverlay').style.display = 'none';
-                if (document.getElementById('loadingWrap')) document.getElementById('loadingWrap').style.display = 'none';
-                if (document.getElementById('mainWrap')) document.getElementById('mainWrap').style.display = 'block';
-            } else if (checkCount > 50) {
-                clearInterval(observer);
-                alert('خطأ فني: محرك العرض لم يستجب.');
+                
+                // إخفاء طبقات التحميل
+                if(document.getElementById('customLoginOverlay')) document.getElementById('customLoginOverlay').style.display = 'none';
+                if(document.getElementById('loadingWrap')) document.getElementById('loadingWrap').style.display = 'none';
+                if(document.getElementById('mainWrap')) document.getElementById('mainWrap').style.display = 'block';
+                console.log('Dashboard rendered successfully.');
+            } else if (checks > 100) {
+                clearInterval(engineObserver);
+                alert('خطأ فني في محرك العرض. يرجى تحديث الصفحة.');
             }
-            checkCount++;
-        }, 200);
+            checks++;
+        }, 50);
     } catch (e) {
-        alert('فشل جلب البيانات: ' + e.message);
+        alert('فشل في جلب البيانات: ' + e.message);
     }
 }
 </script>
