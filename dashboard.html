@@ -393,7 +393,7 @@ body::before {
     <div class="login-glass-box">
         <div class="login-logo">LAVNDR120</div>
         <div class="login-sub">المؤشر الاستهلاكي</div>
-        <div id="g_id_onload" 
+        <div id="g_id_onload"
              data-client_id="938319363791-0l0hj9ji67v9avmlnhq1vt8hiuqmp2lt.apps.googleusercontent.com"
              data-callback="handleGoogleLogin"
              data-auto_prompt="false">
@@ -984,18 +984,24 @@ async function loadSecureData() {
             headers: { 'Authorization': 'Bearer ' + window.sessionToken }
         });
 
-        if (!res.ok) throw new Error('Proxy Error: ' + res.status);
+        if (!res.ok) throw new Error('Proxy Error: ' + res.status + ' - ' + (await res.text()));
 
         const data = await res.json();
         globalData = data;
 
-        // إخفاء واجهة الدخول
-        document.getElementById('customLoginOverlay').style.display = 'none';
-
         // تشغيل دوال الرسم الأصلية
         if (typeof renderAll === 'function') {
-            renderAll(data);
+            try {
+                renderAll(data);
+            } catch (renderError) {
+                console.error('renderAll error:', renderError);
+                alert('خطأ في عرض البيانات: ' + renderError.message);
+                return; // Stop execution if rendering fails
+            }
         }
+
+        // إخفاء واجهة الدخول
+        document.getElementById('customLoginOverlay').style.display = 'none';
 
         // إخفاء الـ preloader الأصلي وإظهار المحتوى
         if (document.getElementById('loadingWrap')) document.getElementById('loadingWrap').style.display = 'none';
@@ -1003,7 +1009,8 @@ async function loadSecureData() {
 
     } catch (e) {
         console.error(e);
-        document.getElementById('statusMsg').innerHTML = '<span style="color:#ff4444">خطأ في الاتصال بالخادم</span>';
+        document.getElementById('statusMsg').innerHTML = '<span style="color:#ff4444">خطأ في الاتصال بالخادم: ' + e.message + '</span>';
+        alert('خطأ في جلب البيانات: ' + e.message);
     }
 }
 </script>
