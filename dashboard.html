@@ -616,15 +616,17 @@ let allWeights = [];
 async function loadData() {
   try {
     let data;
-    // قراءة البيانات من sessionStorage
     const stored = sessionStorage.getItem('lv_data');
     if (stored) {
       data = JSON.parse(stored);
+      sessionStorage.removeItem('lv_data'); // امسح بعد الاستخدام
     } else {
       // جلب مباشر من Cloudflare Worker
       const res = await fetch('https://lavndr120-proxy.imspractice69.workers.dev/data');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       data = await res.json();
     }
+    if (!data || typeof data !== 'object') throw new Error('Invalid data');
     if (data.error) throw new Error(data.error);
     globalData = data;
     renderAll(data);
