@@ -1026,5 +1026,18 @@ function handleGoogleLogin(response) {
 }
 </script>
 
+<script>
+// إخفاء قسري للـ preloader بعد اللوجن
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    const lw = document.getElementById('loadingWrap');
+    const mw = document.getElementById('mainWrap');
+    if (lw && mw && globalData) {
+      lw.style.display = 'none';
+      mw.style.display = 'block';
+    }
+  }, 3000);
+});
+</script>
 </body>
 </html>
