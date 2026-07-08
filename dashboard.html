@@ -959,7 +959,7 @@ function closeNotif() {
 setInterval(loadData, 3600000);
 </script>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src='https://accounts.google.com/gsi/client' async defer></script>
 <script>
 const ALLOWED_EMAILS = ['imspractice69@gmail.com'];
 const PROXY_URL = 'https://lavndr120-proxy.imspractice69.workers.dev/data';
@@ -984,33 +984,27 @@ async function loadSecureData() {
             headers: { 'Authorization': 'Bearer ' + window.sessionToken }
         });
 
-        if (!res.ok) throw new Error('Proxy Error: ' + res.status + ' - ' + (await res.text()));
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error('الخادم أعاد خطأ (' + res.status + '): ' + errText);
+        }
 
         const data = await res.json();
         globalData = data;
 
-        // تشغيل دوال الرسم الأصلية
         if (typeof renderAll === 'function') {
-            try {
-                renderAll(data);
-            } catch (renderError) {
-                console.error('renderAll error:', renderError);
-                alert('خطأ في عرض البيانات: ' + renderError.message);
-                return; // Stop execution if rendering fails
-            }
+            renderAll(data);
         }
 
-        // إخفاء واجهة الدخول
         document.getElementById('customLoginOverlay').style.display = 'none';
-
-        // إخفاء الـ preloader الأصلي وإظهار المحتوى
         if (document.getElementById('loadingWrap')) document.getElementById('loadingWrap').style.display = 'none';
         if (document.getElementById('mainWrap')) document.getElementById('mainWrap').style.display = 'block';
 
     } catch (e) {
         console.error(e);
-        document.getElementById('statusMsg').innerHTML = '<span style="color:#ff4444">خطأ في الاتصال بالخادم: ' + e.message + '</span>';
-        alert('خطأ في جلب البيانات: ' + e.message);
+        // إظهار تنبيه مفصل للمستخدم
+        alert('تفاصيل فشل الاتصال:\n' + e.message);
+        document.getElementById('statusMsg').innerHTML = '<span style="color:#ff4444">فشل في جلب البيانات: ' + e.message + '</span>';
     }
 }
 </script>
