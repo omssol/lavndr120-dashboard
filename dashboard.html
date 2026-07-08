@@ -1011,7 +1011,12 @@ function handleGoogleLogin(response) {
     .then(data => {
       document.getElementById('loginOverlay').style.display = 'none';
       globalData = data;
-      renderAll(data);
+      try {
+        renderAll(data);
+      } catch(e) {
+        alert('renderAll error: ' + e.message);
+        return;
+      }
       document.getElementById('loadingWrap').style.display = 'none';
       document.getElementById('mainWrap').style.display = 'block';
     })
