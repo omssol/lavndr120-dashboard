@@ -1021,5 +1021,31 @@ async function startSecureEngine() {
     }, 20); 
 })();
 </script>
+
+<script>
+// الإصلاح النهائي: مزامنة ذكية مستقلة عن الترتيب
+(function() {
+    const checkIntegrity = () => {
+        if (window.renderAll && window.globalData) {
+            console.log('Final Sync: Engine and Data are valid. Rendering...');
+            try {
+                window.renderAll(window.globalData);
+                if (document.getElementById('loadingWrap')) document.getElementById('loadingWrap').style.display = 'none';
+                if (document.getElementById('mainWrap')) document.getElementById('mainWrap').style.display = 'block';
+                if (document.getElementById('customLoginOverlay')) document.getElementById('customLoginOverlay').style.display = 'none';
+                return true;
+            } catch(e) { console.error('Sync Render Error:', e); }
+        }
+        return false;
+    };
+
+    // Polling until success or timeout (10 seconds)
+    let syncInterval = setInterval(() => {
+        if (checkIntegrity()) clearInterval(syncInterval);
+    }, 50);
+    
+    setTimeout(() => clearInterval(syncInterval), 10000);
+})();
+</script>
 </body>
 </html>
