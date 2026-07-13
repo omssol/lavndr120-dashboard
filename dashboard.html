@@ -391,19 +391,10 @@ function handleGoogleLogin(response) {
       .then(r => r.json())
       .then(data => {
         globalData = data;
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('loadingWrap').style.display = 'none';
-        document.getElementById('mainWrap').style.display = 'block';
-        // انتظر تحميل الصفحة كاملاً قبل renderAll
+        // سيتم الإخفاء بواسطة lavndr_data_ready event
         window._pendingData = data;
-        function _tryRender() {
-          if (typeof renderAll === 'function') {
-            renderAll(window._pendingData);
-          } else {
-            setTimeout(_tryRender, 100);
-          }
-        }
-        _tryRender();
+        // أطلق event لإخبار الـ script الرئيسي
+        document.dispatchEvent(new CustomEvent('lavndr_data_ready', {detail: data}));
       })
       .catch(e => {
         document.getElementById('loginMsg').textContent = 'فشل: ' + e.message;
@@ -717,9 +708,7 @@ function handleGoogleLogin(response) {
       .then(data => {
         globalData = data;
         renderAll(data);
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('loadingWrap').style.display = 'none';
-        document.getElementById('mainWrap').style.display = 'block';
+        // سيتم الإخفاء بواسطة lavndr_data_ready event
       })
       .catch(e => {
         document.getElementById('loginMsg').textContent = 'فشل: ' + e.message;
@@ -1041,6 +1030,16 @@ function closeNotif() {
 
 // ── Init ──
 // loadData تُستدعى بعد اللوجن
+
+// استمع للبيانات من handleGoogleLogin
+document.addEventListener('lavndr_data_ready', function(e) {
+  const data = e.detail;
+  globalData = data;
+  renderAll(data);
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('loadingWrap').style.display = 'none';
+  document.getElementById('mainWrap').style.display = 'block';
+});
 setInterval(loadData, 3600000);
 </script>
 </body>
