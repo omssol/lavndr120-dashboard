@@ -372,8 +372,9 @@ body::before {
 function handleGoogleLogin(response) {
   try {
     const b64 = response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-    const pad = b64 + '=='.slice((4 - b64.length % 4) % 4);
-    const payload = JSON.parse(atob(pad));
+    const padLen = (4 - b64.length % 4) % 4;
+    const padded = b64 + '='.repeat(padLen);
+    const payload = JSON.parse(atob(padded));
     const email = payload.email.toLowerCase();
     const ALLOWED = ['imspractice69@gmail.com'];
     if (!ALLOWED.includes(email)) {
