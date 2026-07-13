@@ -390,11 +390,11 @@ function handleGoogleLogin(response) {
     fetch('https://lavndr120-proxy.imspractice69.workers.dev/data')
       .then(r => r.json())
       .then(data => {
-        window.globalData = data;
-        window.renderAll(data);
+        globalData = data;
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('loadingWrap').style.display = 'none';
         document.getElementById('mainWrap').style.display = 'block';
+        renderAll(data);
       })
       .catch(e => {
         document.getElementById('loginMsg').textContent = 'فشل: ' + e.message;
