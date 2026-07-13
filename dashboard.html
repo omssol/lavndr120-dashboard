@@ -742,6 +742,11 @@ function renderAll(data) {
 }
 
 function renderNAV(data) {
+  // تحديث وقت آخر تحديث
+  try {
+    const t = data.timestamp.split('T')[1].substring(0,5);
+    document.getElementById('lastUpdateText').textContent = 'آخر تحديث ' + t;
+  } catch(e) {}
   const change = parseFloat(data.index.change);
   const isPos  = change >= 0;
   document.getElementById('navValue').textContent = '$' + data.index.NAV;
