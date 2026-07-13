@@ -394,7 +394,12 @@ function handleGoogleLogin(response) {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('loadingWrap').style.display = 'none';
         document.getElementById('mainWrap').style.display = 'block';
-        renderAll(data);
+        try {
+          renderAll(data);
+          document.getElementById('lastUpdateText').textContent = 'آخر تحديث ' + data.timestamp.split('T')[1].substring(0,5);
+        } catch(e) {
+          alert('renderAll error: ' + e.message);
+        }
       })
       .catch(e => {
         document.getElementById('loginMsg').textContent = 'فشل: ' + e.message;
