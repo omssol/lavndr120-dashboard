@@ -746,7 +746,8 @@ function renderNAV(data) {
   try {
     const t = data.timestamp.split('T')[1].substring(0,5);
     document.getElementById('lastUpdateText').textContent = 'آخر تحديث ' + t;
-  } catch(e) {}
+    alert('renderNAV called! time=' + t + ' NAV=' + data.index.NAV);
+  } catch(e) { alert('error: ' + e.message); }
   const change = parseFloat(data.index.change);
   const isPos  = change >= 0;
   document.getElementById('navValue').textContent = '$' + data.index.NAV;
