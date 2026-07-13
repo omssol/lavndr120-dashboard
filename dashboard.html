@@ -368,65 +368,16 @@ body::before {
 .fade-up-3 { animation:fadeUp 0.5s 0.2s ease both; }
 .fade-up-4 { animation:fadeUp 0.5s 0.3s ease both; }
 </style>
-<script>
-function handleGoogleLogin(response) {
-  try {
-    const b64 = response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-    const padLen = (4 - b64.length % 4) % 4;
-    const padded = b64 + '='.repeat(padLen);
-    const payload = JSON.parse(atob(padded));
-    const email = payload.email.toLowerCase();
-    const ALLOWED = ['imspractice69@gmail.com'];
-    if (!ALLOWED.includes(email)) {
-      document.getElementById('loginOverlay').innerHTML =
-        '<div style="text-align:center;padding:60px 20px;">' +
-        '<div style="font-size:28px;font-weight:900;color:#C9A84C;">LAVNDR120</div>' +
-        '<div style="font-size:48px;margin:24px;opacity:0.3;">🔒</div>' +
-        '<div style="color:#555;font-size:14px;">هذا النظام مخصص للمشاركين المسجلين فقط</div></div>';
-      return;
-    }
-    window.USER_EMAIL = email;
-    document.getElementById('loginMsg').textContent = 'جاري تحميل البيانات...';
-    fetch('https://lavndr120-proxy.imspractice69.workers.dev/data')
-      .then(r => r.json())
-      .then(data => {
-        globalData = data;
-        // سيتم الإخفاء بواسطة lavndr_data_ready event
-        window._pendingData = data;
-        // أطلق event لإخبار الـ script الرئيسي
-        document.dispatchEvent(new CustomEvent('lavndr_data_ready', {detail: data}));
-      })
-      .catch(e => {
-        document.getElementById('loginMsg').textContent = 'فشل: ' + e.message;
-      });
-  } catch(e) {
-    document.getElementById('loginMsg').textContent = 'خطأ: ' + e.message;
-  }
-}
-</script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div id="loginOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0f;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;font-family:sans-serif;">
-  <div style="font-size:28px;font-weight:900;background:linear-gradient(135deg,#C9A84C,#F0D080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;letter-spacing:2px;">LAVNDR120</div>
-  <div style="font-size:11px;color:#555;letter-spacing:3px;margin-bottom:40px;">المؤشر الاستهلاكي</div>
-  <div id="g_id_onload" 
-    data-client_id="938319363791-0l0hj9ji67v9avmlnhq1vt8hiuqmp2lt.apps.googleusercontent.com" 
-    data-callback="handleGoogleLogin" 
-    data-auto_prompt="false"
-    data-itp_support="true">
-  </div>
-  <div class="g_id_signin" 
-    data-type="standard" 
-    data-size="large" 
-    data-theme="filled_black"
-    data-text="signin_with" 
-    data-shape="pill"
-    data-logo_alignment="left">
-  </div>
-  <div id="loginMsg" style="color:#888;font-size:13px;margin-top:16px;text-align:center;padding:0 20px;"></div>
+  <div style="font-size:32px;font-weight:900;background:linear-gradient(135deg,#C9A84C,#F0D080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;letter-spacing:2px;">LAVNDR120</div>
+  <div style="font-size:11px;color:#555;letter-spacing:3px;margin-bottom:48px;">المؤشر الاستهلاكي</div>
+  <div id="g_id_onload" data-client_id="938319363791-0l0hj9ji67v9avmlnhq1vt8hiuqmp2lt.apps.googleusercontent.com" data-callback="handleGoogleLogin" data-auto_prompt="false"></div>
+  <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-text="signin_with" data-shape="pill"></div>
+  <div id="loginMsg" style="color:#888;font-size:13px;margin-top:20px;"></div>
 </div>
-
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 
 <!-- Notification Bar -->
@@ -687,37 +638,6 @@ async function loadData() {
   }
 }
 
-function handleGoogleLogin(response) {
-  try {
-    const parts = response.credential.split('.');
-    const pad = parts[1].replace(/-/g,'+').replace(/_/g,'/');
-    const payload = JSON.parse(atob(pad + '=='.slice(0, (4 - pad.length % 4) % 4)));
-    const email = payload.email.toLowerCase();
-    if (!['imspractice69@gmail.com'].includes(email)) {
-      document.getElementById('loginOverlay').innerHTML =
-        '<div style="text-align:center;padding:40px;">' +
-        '<div style="font-size:28px;font-weight:900;color:#C9A84C;">LAVNDR120</div>' +
-        '<div style="font-size:48px;margin:24px;opacity:0.3;">🔒</div>' +
-        '<div style="color:#555;font-size:14px;">هذا النظام مخصص للمشاركين المسجلين فقط</div></div>';
-      return;
-    }
-    window.USER_EMAIL = email;
-    document.getElementById('loginMsg').textContent = 'جاري تحميل البيانات...';
-    fetch('https://lavndr120-proxy.imspractice69.workers.dev/data')
-      .then(r => r.json())
-      .then(data => {
-        globalData = data;
-        renderAll(data);
-        // سيتم الإخفاء بواسطة lavndr_data_ready event
-      })
-      .catch(e => {
-        document.getElementById('loginMsg').textContent = 'فشل: ' + e.message;
-      });
-  } catch(e) {
-    document.getElementById('loginMsg').textContent = 'خطأ: ' + e.message;
-  }
-}
-
 // ── Render All ──
 function renderAll(data) {
   renderNAV(data);
@@ -731,12 +651,6 @@ function renderAll(data) {
 }
 
 function renderNAV(data) {
-  // تحديث وقت آخر تحديث
-  try {
-    const t = data.timestamp.split('T')[1].substring(0,5);
-    document.getElementById('lastUpdateText').textContent = 'آخر تحديث ' + t;
-    alert('renderNAV called! time=' + t + ' NAV=' + data.index.NAV);
-  } catch(e) { alert('error: ' + e.message); }
   const change = parseFloat(data.index.change);
   const isPos  = change >= 0;
   document.getElementById('navValue').textContent = '$' + data.index.NAV;
@@ -1030,17 +944,34 @@ function closeNotif() {
 
 // ── Init ──
 // loadData تُستدعى بعد اللوجن
-
-// استمع للبيانات من handleGoogleLogin
-document.addEventListener('lavndr_data_ready', function(e) {
-  const data = e.detail;
-  globalData = data;
-  renderAll(data);
-  document.getElementById('loginOverlay').style.display = 'none';
-  document.getElementById('loadingWrap').style.display = 'none';
-  document.getElementById('mainWrap').style.display = 'block';
-});
 setInterval(loadData, 3600000);
+
+// ── Google Auth ──
+const _ALLOWED = ['imspractice69@gmail.com'];
+function handleGoogleLogin(response) {
+  try {
+    const b64 = response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    const payload = JSON.parse(atob(b64 + '='.repeat((4 - b64.length % 4) % 4)));
+    const email = payload.email.toLowerCase();
+    if (!_ALLOWED.includes(email)) {
+      document.getElementById('loginOverlay').innerHTML =
+        '<div style="text-align:center;padding:60px 20px;font-family:sans-serif;">' +
+        '<div style="font-size:28px;font-weight:900;color:#C9A84C;">LAVNDR120</div>' +
+        '<div style="font-size:48px;margin:24px;opacity:0.3;">🔒</div>' +
+        '<div style="color:#555;font-size:14px;">هذا النظام مخصص للمشاركين المسجلين فقط</div></div>';
+      return;
+    }
+    window.USER_EMAIL = email;
+    document.getElementById('loginMsg').textContent = 'جاري تحميل البيانات...';
+    loadData().then(() => {
+      document.getElementById('loginOverlay').style.display = 'none';
+    }).catch(e => {
+      document.getElementById('loginMsg').textContent = 'فشل: ' + e.message;
+    });
+  } catch(e) {
+    document.getElementById('loginMsg').textContent = 'خطأ: ' + e.message;
+  }
+}
 </script>
 </body>
 </html>
