@@ -371,14 +371,13 @@ body::before {
 </head>
 <body>
 <div id="loginOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0f;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;font-family:sans-serif;">
-  <div style="font-size:32px;font-weight:900;background:linear-gradient(135deg,#C9A84C,#F0D080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;letter-spacing:2px;">LAVNDR120</div>
-  <div style="font-size:11px;color:#555;letter-spacing:3px;margin-bottom:48px;">المؤشر الاستهلاكي</div>
-  <div id="g_id_onload" data-client_id="938319363791-0l0hj9ji67v9avmlnhq1vt8hiuqmp2lt.apps.googleusercontent.com" data-callback="handleGoogleLogin" data-auto_prompt="false"></div>
-  <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-text="signin_with" data-shape="pill"></div>
-  <div id="loginMsg" style="color:#888;font-size:13px;margin-top:20px;"></div>
+<div style="font-size:32px;font-weight:900;background:linear-gradient(135deg,#C9A84C,#F0D080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;letter-spacing:2px;">LAVNDR120</div>
+<div style="font-size:11px;color:#555;letter-spacing:3px;margin-bottom:48px;">المؤشر الاستهلاكي</div>
+<div id="g_id_onload" data-client_id="938319363791-0l0hj9ji67v9avmlnhq1vt8hiuqmp2lt.apps.googleusercontent.com" data-callback="handleGoogleLogin" data-auto_prompt="false"></div>
+<div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-text="signin_with" data-shape="pill"></div>
+<div id="loginMsg" style="color:#888;font-size:13px;margin-top:20px;"></div>
 </div>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-
 
 <!-- Notification Bar -->
 <div class="notif-bar" id="notifBar">
@@ -624,7 +623,7 @@ let allWeights = [];
 // ── Load Data — كل request يحمل TOKEN ──
 async function loadData() {
   try {
-    const res  = await fetch('https://lavndr120-proxy.imspractice69.workers.dev/data');
+    const res = await fetch('https://lavndr120-proxy.imspractice69.workers.dev/data');
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     globalData = data;
@@ -945,17 +944,23 @@ function closeNotif() {
 // ── Init ──
 // loadData تُستدعى بعد اللوجن
 setInterval(loadData, 3600000);
+</script>
 
-// ── Google Auth ──
-const _ALLOWED = ['imspractice69@gmail.com'];
+<script>
+// ── Google Auth Handler ──
+// يُعرَّف هنا في آخر الملف ليكون بعد جميع دوال الداشبورد
+var _ALLOWED = ['imspractice69@gmail.com'];
 function handleGoogleLogin(response) {
   try {
-    const b64 = response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-    const payload = JSON.parse(atob(b64 + '='.repeat((4 - b64.length % 4) % 4)));
-    const email = payload.email.toLowerCase();
-    if (!_ALLOWED.includes(email)) {
+    var parts = response.credential.split('.');
+    var b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    var pad = b64.length % 4;
+    if (pad) b64 += '==='.slice(0, 4 - pad);
+    var payload = JSON.parse(atob(b64));
+    var email = payload.email.toLowerCase();
+    if (_ALLOWED.indexOf(email) === -1) {
       document.getElementById('loginOverlay').innerHTML =
-        '<div style="text-align:center;padding:60px 20px;font-family:sans-serif;">' +
+        '<div style="text-align:center;padding:60px 20px;">' +
         '<div style="font-size:28px;font-weight:900;color:#C9A84C;">LAVNDR120</div>' +
         '<div style="font-size:48px;margin:24px;opacity:0.3;">🔒</div>' +
         '<div style="color:#555;font-size:14px;">هذا النظام مخصص للمشاركين المسجلين فقط</div></div>';
@@ -963,9 +968,9 @@ function handleGoogleLogin(response) {
     }
     window.USER_EMAIL = email;
     document.getElementById('loginMsg').textContent = 'جاري تحميل البيانات...';
-    loadData().then(() => {
+    loadData().then(function() {
       document.getElementById('loginOverlay').style.display = 'none';
-    }).catch(e => {
+    }).catch(function(e) {
       document.getElementById('loginMsg').textContent = 'فشل: ' + e.message;
     });
   } catch(e) {
@@ -973,5 +978,6 @@ function handleGoogleLogin(response) {
   }
 }
 </script>
+
 </body>
 </html>
